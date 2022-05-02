@@ -13,6 +13,8 @@ bool drawRect = false;
 
 typedef struct{
     Vector2 recPos;
+    int ii;
+    int jj;
 }center;
 
 center Mas[4][4];//масив центрів клітинок
@@ -66,17 +68,20 @@ void test()
     }
 }
 
-Vector2 findClosest(Vector2 pos)
+center findClosest(Vector2 pos)
 {
-    Vector2 res = Mas[0][0].recPos;
-    float min = sqrt(pow(res.x-pos.x,2)+pow(res.y-pos.y,2));
+    center res;
+    res.recPos = Mas[0][0].recPos;
+    float min = sqrt(pow(res.recPos.x-pos.x,2)+pow(res.recPos.y-pos.y,2));
     float cur;
     for(int i = 0; i < 4; i++){
         for(int j = 0; j < 4; j++){
             cur =  sqrt(pow(Mas[i][j].recPos.x - pos.x,2)+pow(Mas[i][j].recPos.y - pos.y,2));
             if(cur < min){
                 min = cur;
-                res = Mas[i][j].recPos;
+                res.recPos = Mas[i][j].recPos;
+                res.ii = i;
+                res.jj = j;
             }
         }
     }
@@ -86,9 +91,12 @@ Vector2 findClosest(Vector2 pos)
 
 int main()
 {
-    int start = 0;
+    char *tmp;
     char *Inp[16] = {"a", "b", "c","d","a", "b", "c","d","a", "b", "c","d","a", "b", "c","d"};
-    Vector2 cursorPos, closest;
+    Vector2 cursorPos;
+    center closest;
+    closest.ii = 0;
+    closest.jj = 0;
     shuffleInput(Inp);
     InitWindow(SCREEN_WIDTH,SCREEN_HEIGHT, "RGR #7");
     Font textF = LoadFont("resources/BluePrinted.ttf");
@@ -98,12 +106,47 @@ int main()
     while(!WindowShouldClose()){
         BeginDrawing();
         if(drawRect){
-            DrawRectangle(closest.x-sizeOfRect/2,closest.y-sizeOfRect/2,sizeOfRect,sizeOfRect,YELLOW);
+            DrawRectangle(closest.recPos.x-sizeOfRect/2,closest.recPos.y-sizeOfRect/2,sizeOfRect,sizeOfRect,YELLOW);
         }
         ClearBackground(WHITE);
         drawBorders(Mas);
         drawLetters(textF,Inp);
-        EndDrawing();
+
+        switch(GetKeyPressed())
+        {
+            case KEY_LEFT:
+                if(!(closest.jj != 0 && closest.ii != 0) || closest.jj > 0 && drawRect && IsKeyPressed(KEY_LEFT)){
+                            tmp = Inp[4*closest.ii+closest.jj];
+                            Inp[4*closest.ii+closest.jj] = Inp[4*closest.ii+closest.jj-1];
+                            Inp[4*closest.ii+closest.jj-1] = tmp;
+                            drawRect = false;
+                }
+                break;
+            case KEY_RIGHT:
+                if(drawRect && IsKeyPressed(KEY_RIGHT)){
+                    tmp = Inp[4*closest.ii+closest.jj];
+                    Inp[4*closest.ii+closest.jj] = Inp[4*closest.ii+closest.jj+1];
+                    Inp[4*closest.ii+closest.jj+1] = tmp;
+                    drawRect = false;
+                }
+
+        }
+
+
+        /*if(drawRect && IsKeyPressed(KEY_RIGHT)){
+            tmp = Inp[4*closest.ii+closest.jj];
+            Inp[4*closest.ii+closest.jj] = Inp[4*closest.ii+closest.jj+1];
+            Inp[4*closest.ii+closest.jj+1] = tmp;
+            drawRect = false;
+        }*/
+        /*if(drawRect && IsKeyPressed(KEY_UP)){
+            if(closest.ii != 0){
+                tmp = Inp[4*closest.ii+closest.jj];
+                Inp[4*closest.ii+closest.jj] = Inp[4*(closest.ii-1)+closest.jj];
+                Inp[4*(closest.ii-1)+closest.jj] = tmp;
+                drawRect = false;
+            }
+        }*/
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
             //BeginDrawing();
             drawRect = true;
@@ -116,7 +159,7 @@ int main()
 
         //test();
 
-
+        EndDrawing();
     }
     return 0;
 }
