@@ -11,11 +11,12 @@ const int lineThick = 3;
 const int sizeOfRect = (SCREEN_HEIGHT-2*gapFromEdge)/4;
 bool drawRect = false;
 
-typedef struct{
+typedef struct
+{
     Vector2 recPos;
     int ii;
     int jj;
-}center;
+} center;
 
 center Mas[4][4];//масив центрів клітинок
 
@@ -23,50 +24,50 @@ center Mas[4][4];//масив центрів клітинок
 void drawBorders()
 {
     Vector2 startPos, endPos;
-    //DrawLineEx((Vector2){gapFromEdge,gapFromEdge-2},(Vector2){gapFromEdge,SCREEN_HEIGHT-gapFromEdge},5,BLACK);
-    //DrawLineEx((Vector2){gapFromEdge-2,gapFromEdge},(Vector2){SCREEN_WIDTH-gapFromEdge,gapFromEdge},5,BLACK);
-    //DrawRectangleLinesEx((Rectangle){gapFromEdge,gapFromEdge,SCREEN_WIDTH-2*gapFromEdge,SCREEN_HEIGHT-2*gapFromEdge},lineThick,BLACK);
-    for(int i = 0; i < 4; i++){
-            for(int j = 0; j < 4; j++){
-                Mas[j][i].recPos.x = gapFromEdge+(sizeOfRect+lineThick)*i+sizeOfRect/2;
-                Mas[j][i].recPos.y = gapFromEdge+(sizeOfRect+lineThick)*j+sizeOfRect/2;
-                DrawRectangleLinesEx((Rectangle){gapFromEdge+(sizeOfRect+lineThick)*i,gapFromEdge+(sizeOfRect+lineThick)*j,sizeOfRect,sizeOfRect},lineThick,BLACK);
-            }
+    for(int i = 0; i < 4; i++)
+    {
+        for(int j = 0; j < 4; j++)
+        {
+            Mas[j][i].recPos.x = gapFromEdge+(sizeOfRect+lineThick)*i+sizeOfRect/2;
+            Mas[j][i].recPos.y = gapFromEdge+(sizeOfRect+lineThick)*j+sizeOfRect/2;
+            Mas[j][i].ii = j;
+            Mas[j][i].jj = i;
+            DrawRectangleLinesEx((Rectangle)
+            {
+                gapFromEdge+(sizeOfRect+lineThick)*i,gapFromEdge+(sizeOfRect+lineThick)*j,sizeOfRect,sizeOfRect
+            },lineThick,BLACK);
+        }
     }
 }
 
-void shuffleInput(char **A)
+void shuffleInput(int A[4][4])
 {
     int rind;
-    char *tmp;
+    int tmp;
     srand(time(0));
-    for(int i = 0; i < 4; i++){
-        for(int j = 0; j < 4; j++){
-            tmp = A[4*i+j];
+    for(int i = 0; i < 4; i++)
+    {
+        for(int j = 0; j < 4; j++)
+        {
+            tmp = A[i][j];
             rind = rand()%4;
-            A[4*i+j]= A[4*i+rind];
-            A[4*i+rind] = tmp;
+            A[i][j]= A[i][rind];
+            A[i][rind] = tmp;
         }
     }
 }
 
-void drawLetters(Font f,char **A)
+void drawLetters(Font f,char *A[4], int B[4][4])
 {
-    for(int i = 0; i < 4; i++){
-        for(int j = 0; j < 4; j++){
-            DrawTextEx(f,A[4*i+j],Mas[i][j].recPos,50,1,BLACK);
+    for(int i = 0; i < 4; i++)
+    {
+        for(int j = 0; j < 4; j++)
+        {
+            DrawTextEx(f,A[B[i][j]-1],Mas[i][j].recPos,50,1,BLACK);
         }
     }
 }
 
-void test()
-{
-        for(int i = 0; i < 4; i++){
-            for(int j = 0; j < 4; j++){
-                DrawCircleLines(Mas[j][i].recPos.x,Mas[j][i].recPos.y,5,BLACK);
-            }
-    }
-}
 
 center findClosest(Vector2 pos)
 {
@@ -74,91 +75,136 @@ center findClosest(Vector2 pos)
     res.recPos = Mas[0][0].recPos;
     float min = sqrt(pow(res.recPos.x-pos.x,2)+pow(res.recPos.y-pos.y,2));
     float cur;
-    for(int i = 0; i < 4; i++){
-        for(int j = 0; j < 4; j++){
+    for(int i = 0; i < 4; i++)
+    {
+        for(int j = 0; j < 4; j++)
+        {
             cur =  sqrt(pow(Mas[i][j].recPos.x - pos.x,2)+pow(Mas[i][j].recPos.y - pos.y,2));
-            if(cur < min){
+            if(cur < min)
+            {
                 min = cur;
                 res.recPos = Mas[i][j].recPos;
-                res.ii = i;
-                res.jj = j;
+                res.ii = Mas[i][j].ii;
+                res.jj = Mas[i][j].jj;
             }
         }
     }
     return res;
 }
 
+bool isSolved(int A[4][4])
+{
+    int count = 0;
+    for(int i = 0; i < 4; i++)
+    {
+        for(int j = 0; j < 4; j++)
+        {
+            count = 0;
+            for(int k = 0; k < 4; k++)
+            {
+                if(count < 2 && A[i][j] == A[i][k]) count++;
+                if(count > 1) return false;
+            }
+        }
+    }
+    for(int i = 0; i < 4; i++)
+    {
+        for(int j = 0; j < 4; j++)
+        {
+            count = 0;
+            for(int k = 0; k < 4; k++)
+            {
+                if(count < 2 && A[j][i] == A[k][i]) count++;
+                if(count > 1) return false;
+            }
+        }
+    }
+    return true;
+}
+
 
 int main()
 {
-    char *tmp;
-    char *Inp[16] = {"a", "b", "c","d","a", "b", "c","d","a", "b", "c","d","a", "b", "c","d"};
+    int tmp;
+    char *Inp[4] = {"a", "b", "c","d"};
+    int IndexMas[4][4] = {1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4};
     Vector2 cursorPos;
     center closest;
     closest.ii = 0;
     closest.jj = 0;
-    shuffleInput(Inp);
+    shuffleInput(IndexMas);
     InitWindow(SCREEN_WIDTH,SCREEN_HEIGHT, "RGR #7");
     Font textF = LoadFont("resources/BluePrinted.ttf");
     SetTargetFPS(10);
 
 
-    while(!WindowShouldClose()){
+    while(!WindowShouldClose())
+    {
         BeginDrawing();
-        if(drawRect){
+        if(drawRect)
+        {
             DrawRectangle(closest.recPos.x-sizeOfRect/2,closest.recPos.y-sizeOfRect/2,sizeOfRect,sizeOfRect,YELLOW);
         }
         ClearBackground(WHITE);
         drawBorders(Mas);
-        drawLetters(textF,Inp);
+        drawLetters(textF,Inp,IndexMas);
 
         switch(GetKeyPressed())
         {
-            case KEY_LEFT:
-                if(!(closest.jj != 0 && closest.ii != 0) || closest.jj > 0 && drawRect && IsKeyPressed(KEY_LEFT)){
-                            tmp = Inp[4*closest.ii+closest.jj];
-                            Inp[4*closest.ii+closest.jj] = Inp[4*closest.ii+closest.jj-1];
-                            Inp[4*closest.ii+closest.jj-1] = tmp;
-                            drawRect = false;
-                }
-                break;
-            case KEY_RIGHT:
-                if(drawRect && IsKeyPressed(KEY_RIGHT)){
-                    tmp = Inp[4*closest.ii+closest.jj];
-                    Inp[4*closest.ii+closest.jj] = Inp[4*closest.ii+closest.jj+1];
-                    Inp[4*closest.ii+closest.jj+1] = tmp;
-                    drawRect = false;
-                }
-
-        }
-
-
-        /*if(drawRect && IsKeyPressed(KEY_RIGHT)){
-            tmp = Inp[4*closest.ii+closest.jj];
-            Inp[4*closest.ii+closest.jj] = Inp[4*closest.ii+closest.jj+1];
-            Inp[4*closest.ii+closest.jj+1] = tmp;
-            drawRect = false;
-        }*/
-        /*if(drawRect && IsKeyPressed(KEY_UP)){
-            if(closest.ii != 0){
-                tmp = Inp[4*closest.ii+closest.jj];
-                Inp[4*closest.ii+closest.jj] = Inp[4*(closest.ii-1)+closest.jj];
-                Inp[4*(closest.ii-1)+closest.jj] = tmp;
+        case KEY_LEFT:
+            if(closest.jj > 0 && drawRect)
+            {
+                tmp = IndexMas[closest.ii][closest.jj];
+                IndexMas[closest.ii][closest.jj] = IndexMas[closest.ii][closest.jj-1];
+                IndexMas[closest.ii][closest.jj-1] = tmp;
                 drawRect = false;
             }
-        }*/
-        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-            //BeginDrawing();
+            break;
+        case KEY_RIGHT:
+            if(closest.jj < 3 && drawRect)
+            {
+                tmp = IndexMas[closest.ii][closest.jj];
+                IndexMas[closest.ii][closest.jj] = IndexMas[closest.ii][closest.jj+1];
+                IndexMas[closest.ii][closest.jj+1] = tmp;
+                drawRect = false;
+            }
+            break;
+        case KEY_UP:
+            if(closest.ii > 0 && drawRect)
+            {
+                tmp = IndexMas[closest.ii][closest.jj];
+                IndexMas[closest.ii][closest.jj] = IndexMas[closest.ii-1][closest.jj];
+                IndexMas[closest.ii-1][closest.jj] = tmp;
+                drawRect = false;
+            }
+            break;
+        case KEY_DOWN:
+            if(closest.ii < 3 && drawRect)
+            {
+                tmp = IndexMas[closest.ii][closest.jj];
+                IndexMas[closest.ii][closest.jj] = IndexMas[closest.ii+1][closest.jj];
+                IndexMas[closest.ii+1][closest.jj] = tmp;
+                drawRect = false;
+            }
+            break;
+        case KEY_ENTER:
+            if(isSolved(IndexMas)) printf("SOLVED!!!\n");
+            else printf("KEEP SOLVING...\n");
+            break;
+        }
+
+        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
             drawRect = true;
             cursorPos.x = GetMouseX();
             cursorPos.y = GetMouseY();
             closest = findClosest(cursorPos);
-            //DrawRectangle(closest.x-sizeOfRect/2,closest.y-sizeOfRect/2,sizeOfRect,sizeOfRect,YELLOW);
-            //EndDrawing();
+            if(closest.ii > 3 || closest.jj < 0)
+            {
+                closest.jj = 0;
+                closest.ii = 0;
+            }
         }
-
-        //test();
-
         EndDrawing();
     }
     return 0;
